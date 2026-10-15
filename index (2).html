@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIRVIS promo embeds — anteprima</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/promo.css">
+<style>
+  /* Mock Foleon page: tinted section, each embed at the fixed height to set in Foleon. */
+  html, body { background: #EEF4F2; }
+  body { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
+  section { margin-top: 28px; }
+  h1 { font-size: 24px; }
+  h2 { font-size: 18px; margin: 0 0 2px; }
+  .meta { margin: 0 0 6px; }
+  code { background: #fff; padding: 2px 6px; border-radius: 6px; font-size: 12.5px; }
+  iframe { width: 100%; border: 0; display: block; }
+</style>
+</head>
+<body>
+<h1>Anteprima volantino — come apparirà in Foleon</h1>
+<p class="small">Ogni blocco è un embed separato, mostrato all'altezza fissa da impostare in Foleon. Il titolo «Le offerte» qui è testo di esempio: in Foleon è un blocco nativo.</p>
+
+<section><p class="small meta"><code>countdown.html</code> · altezza 190</p>
+<iframe src="countdown.html" title="Countdown offerte" height="190"></iframe></section>
+
+<section><p class="small meta"><code>omaggio.html</code> · altezza 570</p>
+<iframe src="omaggio.html" title="Offerta omaggio" height="570"></iframe></section>
+
+<section><h2>Le offerte</h2><p class="small meta"><code>listino.html?view=browse</code> · altezza 470</p>
+<iframe src="listino.html?view=browse" title="Listino promozioni" height="470"></iframe></section>
+
+<section><p class="small meta"><code>stima-ordine.html</code> · altezza 1400</p>
+<iframe src="stima-ordine.html" title="Stima ordine" height="1400"></iframe></section>
+</body>
+</html>
