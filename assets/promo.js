@@ -6,6 +6,10 @@
 
   var params = new URLSearchParams(location.search);
 
+  // ?theme=dark: white text for dark or coloured Foleon sections. ?theme=light: dark text for light sections.
+  var theme = params.get('theme');
+  if (theme === 'dark' || theme === 'light') document.documentElement.classList.add('on-' + theme);
+
   // ---------- CSV ----------
   function parseCSV(text) {
     var rows = [], row = [], field = '', q = false, i, c;

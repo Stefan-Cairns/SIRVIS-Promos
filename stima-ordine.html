@@ -19,12 +19,16 @@
   .group { margin: 16px 0 6px; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
   .group:first-child { margin-top: 0; }
   .sum { margin-top: 16px; padding: 16px; border-radius: var(--radius); background: var(--ink); color: #fff; }
+  .on-dark .sum { background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); }
   .sum dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0 0 12px; }
   .sum dt { opacity: .8; } .sum dd { margin: 0; text-align: right; font-weight: 700; }
-  .sum .total dt, .sum .total dd { font-size: 18px; opacity: 1; }
+  .sum .total dt, .sum .total dd { font-size: 18px; opacity: 1; white-space: nowrap; }
   .sum .gifts { color: var(--tint); }
-  .sum .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .sum .actions .btn { padding-inline: 10px; font-size: 14px; }
+  .on-dark .sum .gifts { color: #fff; }
+  .sum .actions { display: grid; gap: 8px; }
+  .sum .actions .btn { width: 100%; }
+  .sum .btn:not(.ghost) { background: #fff; color: var(--ink); }
+  .sum .btn:not(.ghost):hover { background: var(--tint); }
   .sum .btn.ghost:hover { background: rgba(255,255,255,.08); }
   .sum .btn.ghost { color: #fff; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.4); }
   .sum .small { color: rgba(255,255,255,.7); margin: 10px 0 0; }

@@ -6,26 +6,32 @@
 <title>Offerta omaggio</title>
 <link rel="stylesheet" href="assets/promo.css">
 <style>
-  /* One layout at every width, so the Foleon embed height is the same on phone and desktop. */
-  html, body { height: 100%; }
-  body { padding: 0; background: var(--ink); }
-  .hero { min-height: 100%; display: grid; grid-template-columns: 88px 1fr; align-content: center; align-items: center; gap: 14px 16px; padding: 18px max(18px, calc((100% - 560px) / 2)); background: var(--ink); color: #fff; }
-  .hero .ph { width: 88px; height: 112px; }
+  /* No background of its own: sits on the Foleon section colour. Dark text by default; white with ?theme=dark. */
+  html, body { height: 100%; background: transparent; }
+  body { padding: 0; }
+  .hero { min-height: 100%; display: grid; grid-template-columns: 88px 1fr; align-content: center; align-items: center; gap: 14px 16px; padding: 16px max(16px, calc((100% - 560px) / 2)); color: var(--ink-2); }
+  .hero .ph { width: 88px; height: 112px; box-shadow: inset 0 0 0 1px var(--line); }
   .hero .full { grid-column: 1 / -1; }
   .kicker { display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: var(--tint); color: var(--ink); }
-  .hero h2 { color: #fff; font-size: 19px; margin: 8px 0 0; text-wrap: balance; }
-  .hero p { margin: 0; color: rgba(255,255,255,.82); }
-  .counter { padding: 14px; border-radius: var(--radius); background: rgba(255,255,255,.08); display: grid; gap: 12px; }
+  .hero h2 { color: var(--ink); font-size: 19px; margin: 8px 0 0; text-wrap: balance; }
+  .hero p { margin: 0; }
+  .counter { padding: 14px; border-radius: var(--radius); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); display: grid; gap: 12px; color: var(--ink-2); }
   .counter .line { display: flex; align-items: center; justify-content: space-between; gap: 10px; white-space: nowrap; }
   .counter .step { background: #fff; }
-  .hero .btn { background: var(--accent); color: var(--ink); font-size: 19px; }
-  .hero .btn:hover { background: var(--tint); }
-  .got { font-size: 28px; font-weight: 800; color: var(--accent); }
+  .hero .btn { font-size: 17px; }
+  .got { font-size: 28px; font-weight: 800; color: var(--action); }
   .glasses { display: flex; align-items: center; gap: 4px; height: 22px; overflow: hidden; }
-  .glasses b { font-size: 13px; color: var(--accent); margin-left: 4px; }
+  .glasses b { font-size: 13px; color: var(--action); margin-left: 4px; }
   .glasses i { width: 14px; height: 22px; border-radius: 3px 3px 7px 7px; background: var(--accent); display: block; }
-  .next { font-size: 13px; color: rgba(255,255,255,.82); }
-  .hero .small { color: rgba(255,255,255,.6); }
+  .next { font-size: 13px; }
+  .hero .small { color: var(--muted); }
+  /* Dark or coloured section: white text, translucent counter, white button. */
+  .on-dark .hero, .on-dark .hero h2 { color: #fff; }
+  .on-dark .hero p, .on-dark .next { color: rgba(255,255,255,.88); }
+  .on-dark .hero .small { color: rgba(255,255,255,.75); }
+  .on-dark .counter { background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); color: #fff; }
+  .on-dark .got, .on-dark .glasses b { color: #fff; }
+  .on-dark .glasses i { background: #fff; }
 </style>
 </head>
 <body data-embed="omaggio">
