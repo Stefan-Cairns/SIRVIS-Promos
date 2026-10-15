@@ -34,6 +34,15 @@
   var P = Promo, grid = document.getElementById('grid'), state = { q: '', filter: 'all', sort: 'default' };
   var data;
 
+  // ?view=section shows only the product cards (no title, search, filters or footnote),
+  // for one embed per supplier section in Foleon, e.g. listino.html?filter=s:Peroni&view=section
+  if (P.params.get('view') === 'section') {
+    document.querySelector('.bar').hidden = true;
+    document.querySelector('.tools').hidden = true;
+    document.getElementById('note').hidden = true;
+    document.body.style.paddingBlock = '4px';
+  }
+
   P.load().then(function (d) {
     data = d;
     var cfg = d.cfg;
