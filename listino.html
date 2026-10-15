@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Listino promozioni</title>
+<link rel="stylesheet" href="assets/promo.css">
+</head>
+<body data-embed="listino">
+<div class="bar">
+  <h2 id="title">Le offerte del mese</h2>
+  <a class="btn" id="cta" href="#" target="_blank" rel="noopener">Ordina su SIRVIS</a>
+</div>
+
+<div class="tools">
+  <input class="search" id="q" type="search" placeholder="Cerca prodotto o codice" aria-label="Cerca prodotto o codice">
+  <div class="chips" id="chips" role="group" aria-label="Filtri"></div>
+  <label class="small">Ordina per
+    <select class="sort" id="sort">
+      <option value="default">Fornitore</option>
+      <option value="net">Prezzo cartone</option>
+      <option value="unit">Prezzo unitario</option>
+      <option value="discount">Sconto più alto</option>
+    </select>
+  </label>
+</div>
+
+<div class="grid" id="grid" aria-live="polite"></div>
+<p class="small foot" id="note"></p>
+
+<script src="assets/promo.js"></script>
+<script>
+(function () {
+  var P = Promo, grid = document.getElementById('grid'), state = { q: '', filter: 'all', sort: 'default' };
+  var data;
+
+  P.load().then(function (d) {
+    data = d;
+    var cfg = d.cfg;
+    document.getElementById('title').textContent = cfg.title + ' · ' + cfg.category;
+    var cta = document.getElementById('cta');
+    cta.textContent = cfg.cta_label; cta.href = P.ctaUrl(cfg, 'listino-header');
+    document.getElementById('note').textContent = cfg.price_note + ' Offerte valide dal ' + P.fmtDate(cfg.valid_from) + ' al ' + P.fmtDate(cfg.valid_to) + '. ' + (cfg.timezone_note || '');
+
+    // Filter chips: all, each supplier, promo, alcohol-free, gift
+    var suppliers = [];
+    d.products.forEach(function (p) { if (suppliers.indexOf(p.supplier) < 0) suppliers.push(p.supplier); });
+    var chips = [['all', 'Tutti']].concat(suppliers.map(function (s) { return ['s:' + s, s]; }));
+    if (d.products.some(function (p) { return p.promo; })) chips.push(['promo', 'In promo']);
+    if (d.products.some(function (p) { return p.alcoholFree; })) chips.push(['free', 'Analcoliche']);
+    if (d.products.some(function (p) { return p.gift; })) chips.push(['gift', 'Con omaggio']);
+    var wrap = document.getElementById('chips');
+    wrap.innerHTML = chips.map(function (c) {
+      return '<button class="chip" type="button" data-f="' + P.esc(c[0]) + '" aria-pressed="' + (c[0] === 'all') + '">' + P.esc(c[1]) + '</button>';
+    }).join('');
+    wrap.addEventListener('click', function (e) {
+      var b = e.target.closest('.chip'); if (!b) return;
+      state.filter = b.dataset.f;
+      wrap.querySelectorAll('.chip').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      render();
+    });
+
+    var f = P.params.get('filter'); // e.g. ?filter=s:Peroni to deep-link a supplier section
+    if (f) { var b = wrap.querySelector('[data-f="' + CSS.escape(f) + '"]'); if (b) b.click(); }
+    render();
+    P.autoHeight();
+  }).catch(function (e) { P.fail(grid, e); });
+
+  document.getElementById('q').addEventListener('input', function (e) { state.q = e.target.value.trim().toLowerCase(); render(); });
+  document.getElementById('sort').addEventListener('change', function (e) { state.sort = e.target.value; render(); });
+
+  function match(p) {
+    var f = state.filter;
+    if (f.indexOf('s:') === 0 && p.supplier !== f.slice(2)) return false;
+    if (f === 'promo' && !p.promo) return false;
+    if (f === 'free' && !p.alcoholFree) return false;
+    if (f === 'gift' && !p.gift) return false;
+    if (state.q && (p.name + ' ' + p.code + ' ' + p.supplier).toLowerCase().indexOf(state.q) < 0) return false;
+    return true;
+  }
+
+  function render() {
+    if (!data) return;
+    var list = data.products.filter(match);
+    if (state.sort === 'net') list.sort(function (a, b) { return a.net - b.net; });
+    if (state.sort === 'unit') list.sort(function (a, b) { return a.unit - b.unit; });
+    if (state.sort === 'discount') list.sort(function (a, b) { return b.discount - a.discount; });
+    if (!list.length) { grid.innerHTML = '<p class="empty">Nessun prodotto trovato.</p>'; return; }
+    grid.innerHTML = list.map(card).join('');
+  }
+
+  function card(p) {
+    var cfg = data.cfg, e = P.esc, eur = P.eur.format;
+    var badges = '<span class="badge">-' + P.pct(p.discount) + '</span>';
+    if (p.promo) badges += '<span class="badge soft">' + e(p.promo) + '</span>';
+    if (p.alcoholFree) badges += '<span class="badge free">0.0 analcolica</span>';
+    if (p.gift) badges += '<span class="badge gift">Omaggio: ' + p.gift.qty + ' ' + e(p.gift.item) + ' ogni ' + p.gift.every + ' cartoni</span>';
+    var was = p.compare ? '<s class="num" title="Prezzo standard">' + eur(p.compare.net) + '</s>' : '';
+    var extra = p.compare ? '<dt>Prezzo standard</dt><dd class="num">' + eur(p.compare.net) + ' (-' + P.pct(p.compare.discount) + ')</dd>' : '';
+    return '<article class="card">' + P.imageHTML(p) +
+      '<div class="meta">' +
+        '<div class="supplier">' + e(p.supplier) + '</div>' +
+        '<h3 class="name">' + e(p.name) + '</h3>' +
+        '<div class="fmt">' + e(p.format) + ' · cartone da ' + p.pack + ' · cod. ' + e(p.code) + '</div>' +
+        '<div class="badges">' + badges + '</div>' +
+        '<div class="price"><strong class="num">' + eur(p.net) + '</strong>' + was + '<span class="per">/ cartone</span></div>' +
+        '<div class="per num">' + eur(p.unit) + ' a bottiglia</div>' +
+        '<div class="save num">Risparmi ' + eur(p.saving) + ' a cartone</div>' +
+        '<details class="more"><summary>Dettaglio prezzo</summary><dl>' +
+          '<dt>Listino (L01)</dt><dd class="num">' + eur(p.list) + '</dd>' +
+          '<dt>Sconto</dt><dd class="num">-' + P.pct(p.discount) + '</dd>' +
+          '<dt>Accise</dt><dd class="num">' + eur(p.excise) + '</dd>' + extra +
+          '<dt>Prezzo netto</dt><dd class="num">' + eur(p.net) + '</dd>' +
+        '</dl></details>' +
+      '</div></article>';
+  }
+})();
+</script>
+</body>
+</html>
