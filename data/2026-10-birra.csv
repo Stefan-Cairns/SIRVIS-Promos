@@ -1,0 +1,12 @@
+code,product,supplier,category,format,pack_size,list_price,excise,discount,compare_discount,promo_label,alcohol_free,gift_every,gift_qty,gift_item,gift_code,image,featured
+100967,Messina Cristalli di Sale,Heineken,Birra,Vetro 33cl,24,36.18,2.700,0.25,,Promo SIPRO,,,,,,,
+101418,Messina Vivace,Heineken,Birra,Vetro 33cl,24,21.50,2.527,0.25,,Promo SIPRO,,,,,,,
+100056,Moretti,Heineken,Birra,Vetro 33cl,24,20.78,2.510,0.36,,Promo SIPRO,,,,,,,1
+100162,Ceres Strong,Ceres,Birra,Vetro 33cl,24,45.59,3.866,0.16,,,,3,6,Ceres calici,P00580,,1
+100534,#Raffo,Peroni,Birra,Vetro 33cl,24,20.32,2.486,0.30,0.25,Promo SIPRO,,,,,,,
+101057,Raffo Lavorazione Grezza,Peroni,Birra,Vetro 33cl,24,27.68,2.560,0.32,0.25,Promo SIPRO,,,,,,,
+100052,Peroni Nastro Azzurro,Peroni,Birra,Vetro 33cl,24,25.19,2.700,0.36,0.20,Promo SIPRO,,,,,,,1
+101265,Peroni Nastro Azzurro Zero 0.0,Peroni,Birra,Vetro 33cl,12,14.64,0,0.33,,Promo SIPRO,1,,,,,,
+100169,Beck's,InBev,Birra,Vetro 33cl,24,24.48,2.652,0.24,,,,,,,,,
+100174,Corona Extra,InBev,Birra,Vetro 33cl,24,34.53,2.676,0.24,,,,,,,,,
+101439,Corona Cero 0.0,InBev,Birra,Vetro 33cl,24,37.20,0,0.24,,,1,,,,,,

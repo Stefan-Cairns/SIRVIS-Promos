@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stima ordine</title>
+<link rel="stylesheet" href="assets/promo.css">
+<style>
+  /* Fixed max width + one-line rows, so the Foleon embed height is the same on phone and desktop. */
+  body { max-width: 600px; margin: 0 auto; }
+  .rows { display: grid; gap: 8px; }
+  .row > div:first-child { min-width: 0; }
+  .row .name, .row .sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; padding: 12px 14px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+  .row.on { border-color: var(--ink); background: #fff; }
+  .row .name { font-size: 15px; margin: 0; }
+  .row .sub { font-size: 12.5px; color: var(--muted); }
+  .row .gift { font-size: 12.5px; font-weight: 600; color: var(--good); grid-column: 1 / -1; }
+  .group { margin: 16px 0 6px; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .group:first-child { margin-top: 0; }
+  .sum { margin-top: 16px; padding: 16px; border-radius: var(--radius); background: var(--ink); color: #fff; }
+  .sum dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0 0 12px; }
+  .sum dt { opacity: .8; } .sum dd { margin: 0; text-align: right; font-weight: 700; }
+  .sum .total dt, .sum .total dd { font-size: 18px; opacity: 1; }
+  .sum .gifts { color: var(--tint); }
+  .sum .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sum .actions .btn { padding-inline: 10px; font-size: 14px; }
+  .sum .btn.ghost:hover { background: rgba(255,255,255,.08); }
+  .sum .btn.ghost { color: #fff; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.4); }
+  .sum .small { color: rgba(255,255,255,.7); margin: 10px 0 0; }
+</style>
+</head>
+<body data-embed="stima-ordine">
+<div class="bar">
+  <h2>Calcola il tuo ordine</h2>
+  <button class="btn ghost" id="reset" type="button">Azzera</button>
+</div>
+<p class="small" style="margin:-6px 0 14px">Scegli i cartoni: vedi subito il totale, il risparmio e gli omaggi. L'ordine si completa su SIRVIS.</p>
+
+<div class="rows" id="rows" aria-live="off"></div>
+
+<section class="sum" aria-live="polite">
+  <dl>
+    <dt>Cartoni</dt><dd class="num" id="cases">0</dd>
+    <dt>Risparmio</dt><dd class="num" id="saving">€ 0,00</dd>
+    <dt class="gifts" id="giftsLabel" hidden>Omaggi</dt><dd class="num gifts" id="gifts" hidden></dd>
+    <div class="total" style="display:contents"><dt>Totale stimato</dt><dd class="num" id="total">€ 0,00</dd></div>
+  </dl>
+  <div class="actions">
+    <a class="btn" id="cta" href="#" target="_blank" rel="noopener">Ordina su SIRVIS</a>
+    <button class="btn ghost" id="copy" type="button">Copia riepilogo</button>
+  </div>
+  <p class="small" id="note"></p>
+</section>
+
+<script src="assets/promo.js"></script>
+<script>
+(function () {
+  var P = Promo, rowsEl = document.getElementById('rows'), qty = {}, data;
+  var MAX = 999;
+
+  P.load().then(function (d) {
+    data = d;
+    document.getElementById('cta').textContent = d.cfg.cta_label;
+    document.getElementById('note').textContent = 'Stima indicativa. ' + d.cfg.price_note + ' Valida fino al ' + P.fmtDate(d.cfg.valid_to) + '.';
+    var html = '', last = '';
+    d.products.forEach(function (p) {
+      qty[p.code] = 0;
+      if (p.supplier !== last) { html += '<div class="group">' + P.esc(p.supplier) + '</div>'; last = p.supplier; }
+      html += '<div class="row" data-code="' + P.esc(p.code) + '">' +
+        '<div><h3 class="name">' + P.esc(p.name) + '</h3>' +
+        '<div class="sub num">' + P.eur.format(p.net) + ' / cartone da ' + p.pack + ' · -' + P.pct(p.discount) + '</div></div>' +
+        '<div class="step"><button type="button" data-d="-1" aria-label="Togli un cartone di ' + P.esc(p.name) + '" disabled>−</button>' +
+        '<input class="num" type="number" inputmode="numeric" min="0" max="' + MAX + '" value="0" aria-label="Cartoni di ' + P.esc(p.name) + '">' +
+        '<button type="button" data-d="1" aria-label="Aggiungi un cartone di ' + P.esc(p.name) + '">+</button></div>' +
+        (p.gift ? '<div class="gift" data-gift></div>' : '') +
+      '</div>';
+    });
+    rowsEl.innerHTML = html;
+    // Optional preset from the URL, e.g. ?qty=100162:3,100056:2
+    (P.params.get('qty') || '').split(',').forEach(function (pair) {
+      var kv = pair.split(':'); if (kv[0] in qty) qty[kv[0]] = clamp(parseInt(kv[1], 10));
+    });
+    d.products.forEach(function (p) { paintRow(p.code); });
+    update();
+    P.autoHeight();
+  }).catch(function (e) { P.fail(rowsEl, e); });
+
+  function clamp(n) { return Math.max(0, Math.min(MAX, isNaN(n) ? 0 : n)); }
+  function byCode(c) { return data.products.filter(function (p) { return p.code === c; })[0]; }
+
+  rowsEl.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-d]'); if (!b) return;
+    var c = b.closest('.row').dataset.code;
+    qty[c] = clamp(qty[c] + Number(b.dataset.d)); paintRow(c); update();
+  });
+  rowsEl.addEventListener('input', function (e) {
+    if (e.target.tagName !== 'INPUT') return;
+    var c = e.target.closest('.row').dataset.code;
+    qty[c] = clamp(parseInt(e.target.value, 10)); paintRow(c, true); update();
+  });
+  document.getElementById('reset').addEventListener('click', function () {
+    Object.keys(qty).forEach(function (c) { qty[c] = 0; paintRow(c); }); update();
+  });
+
+  function giftsFor(p, n) { return p.gift ? Math.floor(n / p.gift.every) * p.gift.qty : 0; }
+
+  function paintRow(c, typing) {
+    var row = rowsEl.querySelector('.row[data-code="' + CSS.escape(c) + '"]'), n = qty[c], p = byCode(c);
+    if (!typing) row.querySelector('input').value = n;
+    row.querySelector('[data-d="-1"]').disabled = n === 0;
+    row.classList.toggle('on', n > 0);
+    var g = row.querySelector('[data-gift]');
+    if (g) {
+      var got = giftsFor(p, n), toNext = p.gift.every - (n % p.gift.every);
+      g.textContent = (got ? got + ' ' + p.gift.item + ' in omaggio · ' : 'Omaggio: ') +
+        '+' + toNext + ' ' + (toNext > 1 ? 'cartoni' : 'cartone') + ' per altri ' + p.gift.qty + ' ' + p.gift.item.split(' ').pop() + '.';
+    }
+  }
+
+  function summary() {
+    var lines = [], cases = 0, total = 0, saving = 0, gifts = [];
+    data.products.forEach(function (p) {
+      var n = qty[p.code]; if (!n) return;
+      cases += n; total += p.net * n; saving += p.saving * n;
+      lines.push(n + ' × ' + p.name + ' (cod. ' + p.code + ') = ' + P.eur.format(P.round2(p.net * n)));
+      var g = giftsFor(p, n); if (g) gifts.push(g + ' ' + p.gift.item + ' (cod. ' + p.gift.code + ')');
+    });
+    return { lines: lines, cases: cases, total: P.round2(total), saving: P.round2(saving), gifts: gifts };
+  }
+
+  function update() {
+    var s = summary();
+    document.getElementById('cases').textContent = s.cases;
+    document.getElementById('total').textContent = P.eur.format(s.total);
+    document.getElementById('saving').textContent = P.eur.format(s.saving);
+    var show = s.gifts.length > 0;
+    document.getElementById('giftsLabel').hidden = !show;
+    var g = document.getElementById('gifts'); g.hidden = !show; g.textContent = s.gifts.join(', ');
+    document.getElementById('cta').href = P.ctaUrl(data.cfg, 'stima-ordine');
+  }
+
+  document.getElementById('copy').addEventListener('click', function () {
+    var s = summary(), btn = this;
+    if (!s.cases) { flash(btn, 'Aggiungi almeno un cartone'); return; }
+    var text = data.cfg.title + ' – ' + data.cfg.category + '\n' + s.lines.join('\n') +
+      (s.gifts.length ? '\nOmaggi: ' + s.gifts.join(', ') : '') +
+      '\nTotale stimato: ' + P.eur.format(s.total) + ' (' + data.cfg.price_note + ')';
+    var done = function () { flash(btn, 'Copiato'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { fallback(text); done(); });
+    else { fallback(text); done(); }
+  });
+  function fallback(t) { var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch (e) {} a.remove(); }
+  function flash(b, msg) { var o = b.textContent; b.textContent = msg; setTimeout(function () { b.textContent = o; }, 1800); }
+})();
+</script>
+</body>
+</html>
