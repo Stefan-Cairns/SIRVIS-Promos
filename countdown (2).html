@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scadenza offerte</title>
+<link rel="stylesheet" href="assets/promo.css">
+<style>
+  /* No background: sits on the Foleon section colour. White title, for a dark section. */
+  html, body { height: 100%; background: transparent; }
+  body { padding: 8px 12px; }
+  .cd { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-height: 100%; color: #fff; text-align: center; }
+  .cd .lbl { font-weight: 800; font-size: clamp(22px, 6vw, 34px); line-height: 1.15; color: #fff; text-wrap: balance; }
+  .units { display: flex; gap: clamp(8px, 2.5vw, 16px); width: 100%; max-width: 560px; justify-content: center; }
+  /* Boxes in SIRVIS Primary Hover green: white digits pass contrast, and they stand out on dark or light sections. */
+  .u { flex: 1 1 0; max-width: 128px; min-width: 0; padding: clamp(10px, 2.5vw, 16px) 4px clamp(8px, 2vw, 12px); border-radius: 16px; background: var(--action); color: #fff; }
+  .u b { display: block; font-size: clamp(36px, 12vw, 68px); font-weight: 800; line-height: 1; letter-spacing: -.02em; color: #fff; }
+  .u span { display: block; margin-top: 6px; font-size: clamp(11px, 2.8vw, 14px); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #fff; opacity: .9; }
+  .cd.over .lbl { font-size: clamp(18px, 4.5vw, 24px); }
+</style>
+</head>
+<body data-embed="countdown">
+<div class="cd" id="cd" role="timer" aria-live="off"><span class="lbl">Caricamento…</span></div>
+<script src="assets/promo.js"></script>
+<script>
+(function () {
+  var P = Promo, el = document.getElementById('cd');
+  // End = 23:59:59 Italian time on valid_to. Works out the Rome UTC offset for that date.
+  function romeEnd(iso) {
+    var guess = Date.parse(iso + 'T23:59:59Z');
+    var parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(guess));
+    var h = Number(parts.filter(function (x) { return x.type === 'hour'; })[0].value);
+    var offset = (h - 23 + 24) % 24; // hours Rome is ahead of UTC at that moment
+    return guess - offset * 3600e3;
+  }
+  P.load().then(function (d) {
+    var end = romeEnd(d.cfg.valid_to), timer;
+    var start = Date.parse(d.cfg.valid_from + 'T00:00:00Z');
+    function pad(n) { return n < 10 ? '0' + n : String(n); }
+    function tick() {
+      var ms = end - Date.now();
+      if (ms <= 0) {
+        el.classList.add('over');
+        el.innerHTML = '<span class="lbl">Offerte scadute il ' + P.fmtDate(d.cfg.valid_to) + '. Scopri le nuove promozioni su SIRVIS.</span>' +
+          '<a class="btn" target="_blank" rel="noopener" href="' + P.esc(P.ctaUrl(d.cfg, 'countdown-scaduto')) + '">' + P.esc(d.cfg.cta_label) + '</a>';
+        clearInterval(timer); return;
+      }
+      var s = Math.floor(ms / 1000), dd = Math.floor(s / 86400), hh = Math.floor(s % 86400 / 3600), mm = Math.floor(s % 3600 / 60), ss = s % 60;
+      el.setAttribute('aria-label', 'Mancano ' + dd + ' giorni e ' + hh + ' ore alla fine delle offerte');
+      el.innerHTML = '<span class="lbl">' + (Date.now() < start ? 'Le offerte iniziano il ' + P.fmtDate(d.cfg.valid_from) + ' · scadono tra' : 'Le offerte scadono tra') + '</span>' +
+        '<div class="units num"><div class="u"><b>' + dd + '</b><span>giorni</span></div><div class="u"><b>' + pad(hh) + '</b><span>ore</span></div>' +
+        '<div class="u"><b>' + pad(mm) + '</b><span>min</span></div><div class="u"><b>' + pad(ss) + '</b><span>sec</span></div></div>';
+    }
+    tick(); timer = setInterval(tick, 1000);
+    P.autoHeight();
+  }).catch(function (e) { P.fail(el, e); });
+})();
+</script>
+</body>
+</html>
